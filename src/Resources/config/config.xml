@@ -8,8 +8,8 @@
             <label>String config</label>
         </input-field>
         <input-field>
-            <name>specificStringConfig</name>
-            <label>Specific string config</label>
+            <name>otherStringConfig</name>
+            <label>Other string config</label>
         </input-field>
     </card>
 </config>

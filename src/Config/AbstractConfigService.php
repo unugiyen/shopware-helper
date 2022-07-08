@@ -37,7 +37,7 @@ abstract class AbstractConfigService
     /**
      * @return array|bool|float|int|string|null
      */
-    public function getConfig(string $key, ?string $salesChannelId = null)
+    protected function getConfig(string $key, ?string $salesChannelId = null)
     {
         return $this->systemConfigService->get($this->getConfigPrefix().$key, $salesChannelId);
     }
