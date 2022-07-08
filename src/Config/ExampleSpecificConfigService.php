@@ -8,6 +8,6 @@ class ExampleSpecificConfigService extends ExampleConfigService
 {
     public function getSpecificStringConfig(?string $salesChannelId): string
     {
-        return (string) $this->getConfig(ExampleConfigEnum::SPECIFIC_STRING, $salesChannelId);
+        return (string) $this->getConfig(ExampleConfigEnum::SPECIFIC_STRING, $salesChannelId); // @phpstan-ignore-line
     }
 }

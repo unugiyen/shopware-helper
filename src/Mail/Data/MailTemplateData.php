@@ -9,7 +9,6 @@ use Shopware\Core\System\Locale\LocaleEntity;
 
 class MailTemplateData
 {
-    /** @var array<string, array<string, string>> */
     private array $localContent = [];
     private LanguageEntity $language;
     private LocaleEntity $locale;
@@ -24,17 +23,11 @@ class MailTemplateData
         $this->locale = $locale;
     }
 
-    /**
-     * @return array<string, array<string, string>>
-     */
     public function getLocalContent(): array
     {
         return $this->localContent;
     }
 
-    /**
-     * @param array<string, array<string, string>> $localContent
-     */
     public function setLocalContent(array $localContent): void
     {
         $this->localContent = $localContent;

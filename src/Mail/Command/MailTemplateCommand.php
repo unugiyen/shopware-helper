@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Wdt\ShopwareHelper\Mail\Command;
 
 use Exception;
+use Shopware\Core\Content\MailTemplate\Aggregate\MailTemplateType\MailTemplateTypeCollection;
 use Shopware\Core\Content\MailTemplate\MailTemplateEntity;
 use Shopware\Core\Defaults;
 use Shopware\Core\Framework\Context;
@@ -41,7 +42,6 @@ class MailTemplateCommand extends Command
 
     private SymfonyStyle $io;
 
-    /** @var array<int, string> */
     private array $localeCodes = [];
 
     private EntityRepositoryInterface $salesChannelRepository;
@@ -64,13 +64,11 @@ class MailTemplateCommand extends Command
         $this->addOption(self::OPT_LOCALE, null, InputOption::VALUE_OPTIONAL);
     }
 
-    /**
-     * @return array<int, string>
-     */
     private function getTechnicalNames(): array
     {
         $technicalNames = [];
 
+        /** @var MailTemplateTypeCollection $templateTypes */
         $templateTypes = ($this->mailTemplateTypeRepository->search(new Criteria(), Context::createDefaultContext()))->getEntities();
         foreach ($templateTypes as $templateType) {
             $technicalNames[] = $templateType->getTechnicalName();
@@ -94,9 +92,6 @@ class MailTemplateCommand extends Command
         return ($this->mailTemplateRepository->search($criteria, Context::createDefaultContext()))->first();
     }
 
-    /**
-     * @param array<string, string> $localContentFile
-     */
     private function validateLocalContent(array $localContentFile, string $technicalName): bool
     {
         if (!isset(
@@ -132,10 +127,6 @@ class MailTemplateCommand extends Command
         return true;
     }
 
-    /**
-     * @param array<int, string>                   $technicalNames
-     * @param array<string, array<string, string>> $localContent
-     */
     private function logNotFoundLocalTemplates(
         array $technicalNames,
         array $localContent
@@ -152,9 +143,6 @@ class MailTemplateCommand extends Command
         $this->io->listing($newTemplates);
     }
 
-    /**
-     * @param array<string, array<string, string>> $localContent
-     */
     private function upsert(array $localContent, LanguageEntity $language): void
     {
         foreach ($localContent as $technicalName => $localContentFile) {
@@ -331,7 +319,7 @@ class MailTemplateCommand extends Command
     {
         $this->io = new SymfonyStyle($input, $output);
 
-        $optionLocale = (string) $input->getOption(self::OPT_LOCALE);
+        $optionLocale = (string) $input->getOption(self::OPT_LOCALE); // @phpstan-ignore-line
         $technicalNames = $this->getTechnicalNames();
         $mailTemplateDataCollection = $this->getMailTemplateDataCollection();
 

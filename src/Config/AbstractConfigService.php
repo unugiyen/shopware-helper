@@ -19,23 +19,23 @@ abstract class AbstractConfigService
 
     abstract protected function getPluginClass(): string;
 
-    protected function getShortName(ReflectionClass $class): string
+    protected function getShortName(ReflectionClass $class): string // @phpstan-ignore-line
     {
         return $class->getShortName();
     }
 
-    protected function getReflectionClass(): ReflectionClass
+    protected function getReflectionClass(): ReflectionClass // @phpstan-ignore-line
     {
-        return new ReflectionClass($this->getPluginClass());
+        return new ReflectionClass($this->getPluginClass()); // @phpstan-ignore-line
     }
 
     protected function getConfigPrefix(): string
     {
-        return $this->getShortName($this->getReflectionClass()) .'.config.';
+        return $this->getShortName($this->getReflectionClass()).'.config.';
     }
 
     /**
-     * @return mixed
+     * @return array|bool|float|int|string|null
      */
     public function getConfig(string $key, ?string $salesChannelId = null)
     {

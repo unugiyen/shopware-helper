@@ -41,13 +41,6 @@ abstract class AbstractMailService
         $this->mailTemplateRepository = $mailTemplateRepository;
     }
 
-    /**
-     * @param array<int, string> $templateTechnicalNames
-     *
-     * @return array<string, MailTemplateEntity>
-     *
-     * @throws Exception
-     */
     protected function validateAndGetTemplates(array $templateTechnicalNames, SalesChannelContext $context): array
     {
         $templates = [];
@@ -63,9 +56,6 @@ abstract class AbstractMailService
         return $templates;
     }
 
-    /**
-     * @return array<string, array<string, string>|string|null>
-     */
     protected function setMailData(MailData $mailData, SalesChannelContext $context): array
     {
         $template = $mailData->getTemplate();

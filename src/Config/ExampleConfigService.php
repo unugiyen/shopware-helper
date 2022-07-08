@@ -15,6 +15,6 @@ class ExampleConfigService extends AbstractConfigService
 
     public function getStringConfig(?string $salesChannelId = null): string
     {
-        return (string) $this->getConfig(ExampleConfigEnum::STRING, $salesChannelId);
+        return (string) $this->getConfig(ExampleConfigEnum::STRING, $salesChannelId); // @phpstan-ignore-line
     }
 }

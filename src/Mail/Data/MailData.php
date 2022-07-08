@@ -10,22 +10,13 @@ class MailData
 {
     protected ?string $senderName = null;
     protected ?string $senderEmail = null;
-
-    /** @var array<string, string> */
     protected array $recipients = [];
     protected MailTemplateEntity $template;
-
-    /** @var array<string, mixed> */
     protected array $templateData = [];
     protected ?string $recipientsCc = null;
     protected ?string $recipientsBcc = null;
-
-    /** @var array<string, string> */
     protected ?array $binAttachments = [];
 
-    /**
-     * @param array<string, string> $recipients
-     */
     public function __construct(
         MailTemplateEntity $template,
         string $senderName,
@@ -68,33 +59,21 @@ class MailData
         $this->template = $template;
     }
 
-    /**
-     * @return array<string, string>
-     */
     public function getRecipients(): array
     {
         return $this->recipients;
     }
 
-    /**
-     * @param array<string, string> $recipients
-     */
     public function setRecipients(array $recipients): void
     {
         $this->recipients = $recipients;
     }
 
-    /**
-     * @return array<string, mixed>
-     */
     public function getTemplateData(): array
     {
         return $this->templateData;
     }
 
-    /**
-     * @param array<string, mixed> $templateData
-     */
     public function setTemplateData(array $templateData): void
     {
         $this->templateData = $templateData;
@@ -120,17 +99,11 @@ class MailData
         $this->senderEmail = $senderEmail;
     }
 
-    /**
-     * @return array<string, string>
-     */
     public function getBinAttachments(): ?array
     {
         return $this->binAttachments;
     }
 
-    /**
-     * @param array<string, string> $binAttachments
-     */
     public function setBinAttachments(?array $binAttachments): void
     {
         $this->binAttachments = $binAttachments;

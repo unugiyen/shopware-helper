@@ -4,23 +4,19 @@ declare(strict_types=1);
 
 namespace Wdt\ShopwareHelper\Config;
 
-use Exception;
-use ReflectionClass;
-use Shopware\Core\Framework\Struct\ArrayStruct;
 use Shopware\Storefront\Event\StorefrontRenderEvent;
-use Shopware\Storefront\Page\Product\ProductPageLoadedEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Wdt\ShopwareHelper\Config\ExampleConfigService;
-use Wdt\ShopwareHelper\Config\ExampleSpecificConfigService;
-use Wdt\ShopwareHelper\WdtShopwareHelper;
 
+/**
+ * @SuppressWarnings(PHPMD.UnusedLocalVariable)
+ */
 class ExampleConfigSubscriber implements EventSubscriberInterface
 {
     private ExampleConfigService $configService;
     private ExampleSpecificConfigService $specificConfigService;
 
     public function __construct(
-        ExampleConfigService         $configService,
+        ExampleConfigService $configService,
         ExampleSpecificConfigService $specificConfigService
     ) {
         $this->configService = $configService;
@@ -34,12 +30,12 @@ class ExampleConfigSubscriber implements EventSubscriberInterface
         ];
     }
 
-    public function onStorefrontRender(StorefrontRenderEvent $event)
+    public function onStorefrontRender(StorefrontRenderEvent $event): void
     {
         $context = $event->getSalesChannelContext();
 
         /**
-         * Set $salesChannelId param to get specific sales channel value.
+         * Set $salesChannelId param to get specific sales channel config value.
          */
 
         $globalStringConfig = $this->configService->getStringConfig();

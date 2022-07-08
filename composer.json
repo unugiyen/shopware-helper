@@ -21,9 +21,9 @@
         "shopware/administration": "~6.4.0"
     },
     "require-dev": {
-        "phpmd/phpmd": "^2.6",
-        "friendsofphp/php-cs-fixer": "^3.1",
-        "phpstan/phpstan": "^0.12.99"
+        "phpmd/phpmd": "^2.0",
+        "friendsofphp/php-cs-fixer": "^3.0",
+        "phpstan/phpstan": "^1.0"
     },
     "extra": {
         "shopware-plugin-class": "Wdt\\ShopwareHelper\\WdtShopwareHelper",
