@@ -1,6 +1,6 @@
 {
     "name": "wdt/sw6-shopware-helper",
-    "description": "Examples of Shopware patterns",
+    "description": "Examples and ultils of Shopware common patterns",
     "type": "shopware-platform-plugin",
     "license": "MIT",
     "authors": [
