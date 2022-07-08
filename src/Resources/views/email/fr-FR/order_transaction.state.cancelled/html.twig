@@ -1,0 +1,8 @@
+<div style="font-family:arial; font-size:16px;">
+    <p>
+        Cher Monsieur/Madame {{order.orderCustomer.lastName}},<br/><br/>
+        Le statut de votre commande {{order.orderNumber}} au {{ order.orderDateTime|date }} a changé.<br/>
+        <strong>Le nouveau statut est le suivant: {{order.transactions.first.stateMachineState.name}}</strong><br/>
+        Vous pouvez vérifier l'état actuel de votre commande via votre compte.
+    </p>
+</div>

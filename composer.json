@@ -1,0 +1,35 @@
+{
+    "name": "wdt/sw6-shopware-helper",
+    "description": "Examples of Shopware patterns",
+    "type": "shopware-platform-plugin",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "WebdesignTilburg",
+            "homepage": "https://www.webdesigntilburg.nl"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Wdt\\ShopwareHelper\\": "src/"
+        }
+    },
+    "require": {
+        "php": "^7.4.3 || ^8.0",
+        "shopware/core": "~6.4.0",
+        "shopware/storefront": "~6.4.0",
+        "shopware/administration": "~6.4.0"
+    },
+    "require-dev": {
+        "phpmd/phpmd": "^2.6",
+        "friendsofphp/php-cs-fixer": "^3.1",
+        "phpstan/phpstan": "^0.12.99"
+    },
+    "extra": {
+        "shopware-plugin-class": "Wdt\\ShopwareHelper\\WdtShopwareHelper",
+        "label": {
+            "de-DE": "WDT Shopware Helper",
+            "en-GB": "WDT Shopware Helper"
+        }
+    }
+}

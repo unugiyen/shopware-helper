@@ -1,0 +1,11 @@
+{% sw_extends '@WdtShopwareHelper/storefront/component/wdt-form.html.twig' %}
+
+{% set wdtFormSubmitRoute = 'frontend.wdt.form.submit' %}
+
+{% block wdt_form_action %}
+    action="{{ path(wdtFormSubmitRoute) }}"
+{% endblock %}
+
+{% block wdt_form_crsf %}
+    {{ sw_csrf(wdtFormSubmitRoute) }}
+{% endblock %}

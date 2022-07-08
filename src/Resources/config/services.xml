@@ -1,0 +1,61 @@
+<?xml version="1.0" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+    <parameters>
+        <parameter key="wdt.shopware.helper.project_dir">%kernel.project_dir%</parameter>
+    </parameters>
+    <services>
+
+        <service id="Wdt\ShopwareHelper\Config\ExampleConfigService" >
+            <argument type="service" id="Shopware\Core\System\SystemConfig\SystemConfigService"/>
+        </service>
+        <service id="Wdt\ShopwareHelper\Config\ExampleSpecificConfigService" >
+            <argument type="service" id="Shopware\Core\System\SystemConfig\SystemConfigService"/>
+        </service>
+        <service id="Wdt\ShopwareHelper\Config\ExampleConfigSubscriber">
+            <argument type="service" id="Wdt\ShopwareHelper\Config\ExampleConfigService"/>
+            <argument type="service" id="Wdt\ShopwareHelper\Config\ExampleSpecificConfigService"/>
+            <tag name="kernel.event_subscriber"/>
+        </service>
+
+        <service id="Wdt\ShopwareHelper\Form\Controller\CustomFormController" public="true">
+            <argument type="service" id="logger"/>
+            <argument type="service" id="Shopware\Core\Framework\Validation\DataValidator"/>
+            <argument type="service" id="Wdt\ShopwareHelper\Mail\CustomMailService"/>
+            <argument type="service" id="Wdt\ShopwareHelper\Config\ExampleConfigService"/>
+            <call method="setContainer">
+                <argument type="service" id="service_container"/>
+            </call>
+        </service>
+        <service id="Wdt\ShopwareHelper\Mail\CustomMailService" >
+            <argument type="service" id="Shopware\Core\Content\Mail\Service\MailService"/>
+            <argument type="service" id="mail_template.repository"/>
+        </service>
+
+        <service id="Wdt\ShopwareHelper\Mail\Command\MailTemplateCommand">
+            <argument type="service" id="sales_channel.repository"/>
+            <argument type="service" id="mail_template_type.repository"/>
+            <argument type="service" id="mail_template.repository"/>
+            <tag name="console.command"/>
+        </service>
+        <service id="Wdt\ShopwareHelper\Media\MediaService">
+            <argument type="service" id="media.repository"/>
+        </service>
+        <service id="Wdt\ShopwareHelper\Media\Twig\MediaExtension">
+            <argument type="service" id="Wdt\ShopwareHelper\Media\MediaService"/>
+            <tag name="twig.extension"/>
+        </service>
+
+        <service id="Wdt\ShopwareHelper\Subscriber\ProductSubscriber">
+            <tag name="kernel.event_subscriber"/>
+        </service>
+
+
+        <service id="Wdt\ShopwareHelper\Service\CartProcessor">
+            <tag name="shopware.cart.processor" priority="4500" />
+        </service>
+
+    </services>
+</container>

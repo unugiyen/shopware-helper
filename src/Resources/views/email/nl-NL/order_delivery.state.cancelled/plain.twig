@@ -1,0 +1,4 @@
+Geachte Heer/Mevrouw {{order.orderCustomer.lastName}},
+De status van uw bestelling {{ order.orderNumber }} op {{ order.orderDateTime|date }} is veranderd.
+De nieuwe status is als volgt: {{ order.deliveries.first.stateMachineState.name }}
+U kunt de huidige status van uw bestelling bekijken via uw account.

@@ -1,0 +1,4 @@
+Dear Sir/Madam {{order.orderCustomer.lastName}},
+The status of your order {{order.orderNumber}}) on {{ order.orderDateTime|date }} has changed.
+The new status is as follows: {{order.stateMachineState.name}}.
+You can check the current status of your order via your account.

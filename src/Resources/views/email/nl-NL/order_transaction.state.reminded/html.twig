@@ -1,0 +1,8 @@
+<div style="font-family:arial; font-size:16px;">
+    <p>
+        Geachte Heer/Mevrouw {{ order.orderCustomer.lastName }},<br/><br/>
+        De status van uw bestelling {{ order.orderNumber }} op {{ order.orderDateTime|date }} is veranderd.<br/>
+        <strong>De nieuwe status is als volgt: {{ order.transactions.first.stateMachineState.name }}</strong><br/>
+        U kunt de huidige status van uw bestelling bekijken via uw account.
+    </p>
+</div>

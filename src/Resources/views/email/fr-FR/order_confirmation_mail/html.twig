@@ -1,0 +1,145 @@
+<div style="font-family:arial; font-size:16px;">
+
+    {% set currencyIsoCode = order.currency.isoCode %}
+
+    <p>
+        Cher Monsieur/Madame {{ order.orderCustomer.lastName }},<br/><br/>
+        Merci d'avoir commandé la commande.<br/><br/>
+        Nous avons reçu votre commande à: {{ order.orderDateTime|format_datetime('medium', 'short', locale='fr-FR') }}.<br/>
+        Numéro de commande: {{ order.orderNumber }}<br/><br/>
+        Dès que votre paiement aura été effectué, vous recevrez une notification séparée et votre commande sera traitée.<br/>
+        Vous pouvez voir l'état actuel de votre commande via votre compte.
+    </p>
+
+    <p><strong>Informations sur votre commande:</strong></p>
+
+    <table border="0" style="font-family:arial; font-size:16px;">
+        <tr>
+            <td bgcolor="#F7F7F2" style="border-bottom:1px solid #cccccc;"><strong>Numéro de produit</strong></td>
+            <td bgcolor="#F7F7F2" style="border-bottom:1px solid #cccccc;"><strong>La description</strong></td>
+            <td bgcolor="#F7F7F2" style="border-bottom:1px solid #cccccc;"><strong>uantité</strong></td>
+            <td bgcolor="#F7F7F2" style="border-bottom:1px solid #cccccc;"><strong>Prix</strong></td>
+            <td bgcolor="#F7F7F2" style="border-bottom:1px solid #cccccc;"><strong>Le total</strong></td>
+        </tr>
+
+        {% for lineItem in order.nestedLineItems %}
+
+            {% set nestingLevel = 0 %}
+            {% set nestedItem = lineItem %}
+
+            {% block lineItem %}
+                <tr>
+                    <td>{% if nestedItem.payload.productNumber is defined %}{{ nestedItem.payload.productNumber|u.wordwrap(80) }}{% endif %}</td>
+                    <td>
+                        {% if nestingLevel > 0 %}
+                            {% for i in 1..nestingLevel %}
+                                <span style="position: relative;">
+                            <span style="display: inline-block;
+                                    position: absolute;
+                                    width: 6px;
+                                    height: 20px;
+                                    top: 0;
+                                    border-left:  2px solid rgba(0, 0, 0, 0.15);
+                                    margin-left: {{ i * 10 }}px;"></span>
+                        </span>
+                            {% endfor %}
+                        {% endif %}
+
+                        <div{% if nestingLevel > 0 %} style="padding-left: {{ (nestingLevel + 1) * 10 }}px"{% endif %}>
+                            {{ nestedItem.label|u.wordwrap(80) }}
+                        </div>
+
+                        {% if nestedItem.payload.options is defined and nestedItem.payload.options|length >= 1 %}
+                            <div>
+                                {% for option in nestedItem.payload.options %}
+                                    {{ option.group }}: {{ option.option }}
+                                    {% if nestedItem.payload.options|last != option %}
+                                        {{ " | " }}
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        {% if nestedItem.payload.features is defined and nestedItem.payload.features|length >= 1 %}
+                            {% set referencePriceFeatures = nestedItem.payload.features|filter(feature => feature.type == 'referencePrice') %}
+                            {% if referencePriceFeatures|length >= 1 %}
+                                {% set referencePriceFeature = referencePriceFeatures|first %}
+                                <div>
+                                    {{ referencePriceFeature.value.purchaseUnit }} {{ referencePriceFeature.value.unitName }}
+                                    ({{ referencePriceFeature.value.price|currency(currencyIsoCode) }}*
+                                    / {{ referencePriceFeature.value.referenceUnit }} {{ referencePriceFeature.value.unitName }}
+                                    )
+                                </div>
+                            {% endif %}
+                        {% endif %}
+                    </td>
+                    <td style="text-align: center">{{ nestedItem.quantity }}</td>
+                    <td>{{ nestedItem.unitPrice|currency(currencyIsoCode) }}</td>
+                    <td>{{ nestedItem.totalPrice|currency(currencyIsoCode) }}</td>
+                </tr>
+
+                {% if nestedItem.children.count > 0 %}
+                    {% set nestingLevel = nestingLevel + 1 %}
+                    {% for lineItem in nestedItem.children %}
+                        {% set nestedItem = lineItem %}
+                        {{ block('lineItem') }}
+                    {% endfor %}
+                {% endif %}
+            {% endblock %}
+        {% endfor %}
+    </table>
+
+    <br/><br/>
+
+    {% set delivery = order.deliveries.first %}
+    {% set displayRounded = order.totalRounding.interval != 0.01 or order.totalRounding.decimals != order.itemRounding.decimals %}
+    {% set decimals = order.totalRounding.decimals %}
+    {% set total = order.price.totalPrice %}
+    {% if displayRounded %}
+        {% set total = order.price.rawTotal %}
+        {% set decimals = order.itemRounding.decimals %}
+    {% endif %}
+
+    <p>
+        Frais d'expédition: {{ order.deliveries.first.shippingCosts.totalPrice|currency(currencyIsoCode) }}<br/>
+
+        Total hors TVA: {{ order.amountNet|currency(currencyIsoCode) }}<br/>
+        {% for calculatedTax in order.price.calculatedTaxes %}
+            {% if order.taxStatus is same as('net') %}hors{% else %}comprise{% endif %} {{ calculatedTax.taxRate }}% TVA. {{ calculatedTax.tax|currency(currencyIsoCode) }}<br/>
+        {% endfor %}
+        {% if not displayRounded %}<strong>{% endif %}Total TTC: {{ total|currency(currencyIsoCode,decimals=decimals) }}{% if not displayRounded %}</strong>{% endif %}<br/>
+        {% if displayRounded %}
+            <strong>Total TTC: {{ order.price.totalPrice|currency(currencyIsoCode,decimals=order.totalRounding.decimals) }}</strong><br/>
+        {% endif %}
+
+        <strong>Mode de livraison:</strong> {{ delivery.shippingMethod.translated.name }}<br/>
+        {{ delivery.shippingMethod.translated.description }}<br/>
+
+        {% set billingAddress = order.addresses.get(order.billingAddressId) %}
+        <strong>Adresse de facturation:</strong><br/>
+        {{ billingAddress.company }}<br/>
+        {{ billingAddress.firstName }} {{ billingAddress.lastName }}<br/>
+        {{ billingAddress.street }} <br/>
+        {{ billingAddress.zipcode }} {{ billingAddress.city }}<br/>
+        {{ billingAddress.country.translated.name }}<br/>
+
+        <strong>Adresse de livraison:</strong><br/>
+        {{ delivery.shippingOrderAddress.company }}<br/>
+        {{ delivery.shippingOrderAddress.firstName }} {{ delivery.shippingOrderAddress.lastName }}<br/>
+        {{ delivery.shippingOrderAddress.street }} <br/>
+        {{ delivery.shippingOrderAddress.zipcode}} {{ delivery.shippingOrderAddress.city }}<br/>
+        {{ delivery.shippingOrderAddress.country.translated.name }}<br/>
+
+        {% if order.orderCustomer.vatIds %}
+            Numéro de TVA: {{ order.orderCustomer.vatIds|first }}<br/>
+            Avec une commande réussie et si vous êtes situé dans l'un des pays de l'UE, vous recevrez vos produits exonérés de taxe de vente.
+        {% endif %}
+    </p>
+
+    <br/><br/>
+
+    <p>
+        Vous pouvez vérifier l'état actuel de votre commande sur notre site Web sous votre compte.<br/>
+        Si vous avez des questions, n'hésitez pas à nous contacter.
+    </p>
+</div>
