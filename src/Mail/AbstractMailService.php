@@ -102,7 +102,7 @@ abstract class AbstractMailService
 
     public function send(MailData $mailData, SalesChannelContext $context): void
     {
-        $shopwareMailData = $this->setMailData($mailData, $context);
-        $this->shopwareMailService->send($shopwareMailData, $context->getContext(), $mailData->getTemplateData());
+        $shopMailData = $this->setMailData($mailData, $context);
+        $this->shopwareMailService->send($shopMailData, $context->getContext(), $mailData->getTemplateData());
     }
 }

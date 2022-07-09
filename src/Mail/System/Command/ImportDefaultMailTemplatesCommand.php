@@ -29,7 +29,7 @@ use Wdt\ShopwareHelper\Mail\System\Command\Data\MailTemplateData;
 /**
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
-class ImportDefaultMailTemplateCommand extends Command
+class ImportDefaultMailTemplatesCommand extends Command
 {
     use SymfonyStyleTrait;
 

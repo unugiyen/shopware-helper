@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Wdt\ShopwareHelper\Mail\Data;
 
 use Shopware\Core\Content\MailTemplate\MailTemplateEntity;
+use Shopware\Core\Framework\Struct\Struct;
 
-class MailData
+class MailData extends Struct
 {
     protected ?string $senderName = null;
     protected ?string $senderEmail = null;

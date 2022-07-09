@@ -8,6 +8,7 @@
     </parameters>
     <services>
 
+        <!-- EXAMPLE: CONFIG -->
         <service id="Wdt\ShopwareHelper\Config\Example\ConfigService" >
             <argument type="service" id="Shopware\Core\System\SystemConfig\SystemConfigService"/>
         </service>
@@ -22,19 +23,22 @@
             <argument type="service" id="Wdt\ShopwareHelper\Config\Example\ConfigDataService"/>
             <tag name="kernel.event_subscriber"/>
         </service>
+        <!-- END EXAMPLE: CONFIG -->
 
+        <!-- EXAMPLE: PAGE EXTENSION -->
         <service id="Wdt\ShopwareHelper\PageExtension\Example\PageDataService" >
         </service>
         <service id="Wdt\ShopwareHelper\PageExtension\Example\PageExtensionSubscriber">
             <argument type="service" id="Wdt\ShopwareHelper\PageExtension\Example\PageDataService"/>
             <tag name="kernel.event_subscriber"/>
         </service>
+        <!-- END EXAMPLE: PAGE EXTENSION -->
 
-        <service id="Wdt\ShopwareHelper\Mail\CustomMailService" >
+        <service id="Wdt\ShopwareHelper\Mail\Example\MailService" >
             <argument type="service" id="Shopware\Core\Content\Mail\Service\MailService"/>
             <argument type="service" id="mail_template.repository"/>
         </service>
-        <service id="Wdt\ShopwareHelper\Mail\System\Command\ImportDefaultMailTemplateCommand">
+        <service id="Wdt\ShopwareHelper\Mail\System\Command\ImportDefaultMailTemplatesCommand">
             <argument type="service" id="sales_channel.repository"/>
             <argument type="service" id="mail_template_type.repository"/>
             <argument type="service" id="mail_template.repository"/>
@@ -43,10 +47,6 @@
 
         <service id="Wdt\ShopwareHelper\Media\MediaService">
             <argument type="service" id="media.repository"/>
-        </service>
-        <service id="Wdt\ShopwareHelper\Media\Twig\MediaExtension">
-            <argument type="service" id="Wdt\ShopwareHelper\Media\MediaService"/>
-            <tag name="twig.extension"/>
         </service>
     </services>
 </container>

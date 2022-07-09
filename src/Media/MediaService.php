@@ -44,8 +44,7 @@ class MediaService
     public function getMediaThumbnailUrl(
         string $mediaId,
         int $width = 400,
-        int $height = 400,
-        bool $originalUrl = true
+        int $height = 400
     ): ?string {
         $media = $this->getMedia($mediaId);
         if (null === $media) {
@@ -65,10 +64,6 @@ class MediaService
         $thumbnail = $this->filterMediaThumbnail($thumbnails, $width, $height);
         if (null !== $thumbnail) {
             return $thumbnail->getUrl();
-        }
-
-        if ($originalUrl) {
-            return $media->getUrl();
         }
 
         return null;
