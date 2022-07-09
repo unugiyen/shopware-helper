@@ -2,11 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Wdt\ShopwareHelper\Mail\Data;
+namespace Wdt\ShopwareHelper\Mail\System\Command\Data;
 
+use Shopware\Core\Framework\Struct\Struct;
 use Shopware\Core\System\Language\LanguageEntity;
 
-class MailTemplateData
+class MailTemplateData extends Struct
 {
     private array $localContent = [];
     private LanguageEntity $language;

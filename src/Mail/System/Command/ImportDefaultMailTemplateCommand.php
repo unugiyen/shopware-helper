@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Wdt\ShopwareHelper\Mail\Command;
+namespace Wdt\ShopwareHelper\Mail\System\Command;
 
 use Exception;
 use Shopware\Core\Content\MailTemplate\Aggregate\MailTemplateType\MailTemplateTypeCollection;
@@ -23,8 +23,8 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Finder\Finder;
 use Wdt\ShopwareHelper\Command\Traits\SymfonyStyleTrait;
-use Wdt\ShopwareHelper\Mail\Command\Data\LogData;
-use Wdt\ShopwareHelper\Mail\Data\MailTemplateData;
+use Wdt\ShopwareHelper\Mail\System\Command\Data\LogData;
+use Wdt\ShopwareHelper\Mail\System\Command\Data\MailTemplateData;
 
 /**
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
@@ -292,7 +292,7 @@ class ImportDefaultMailTemplateCommand extends Command
     {
         $finder = new Finder();
         $finder->files()->in(
-            sprintf('%1$s/../../%2$s/%3$s', __DIR__, self::BASE_DIR, $locale)
+            sprintf('%1$s/../%2$s/%3$s', __DIR__, self::BASE_DIR, $locale)
         );
 
         $data = [];

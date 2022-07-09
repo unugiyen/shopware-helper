@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Wdt\ShopwareHelper\Mail\Command\Data;
+namespace Wdt\ShopwareHelper\Mail\System\Command\Data;
 
 use Shopware\Core\Framework\Struct\Struct;
 

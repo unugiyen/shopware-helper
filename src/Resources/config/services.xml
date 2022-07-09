@@ -34,7 +34,7 @@
             <argument type="service" id="Shopware\Core\Content\Mail\Service\MailService"/>
             <argument type="service" id="mail_template.repository"/>
         </service>
-        <service id="Wdt\ShopwareHelper\Mail\Command\ImportDefaultMailTemplateCommand">
+        <service id="Wdt\ShopwareHelper\Mail\System\Command\ImportDefaultMailTemplateCommand">
             <argument type="service" id="sales_channel.repository"/>
             <argument type="service" id="mail_template_type.repository"/>
             <argument type="service" id="mail_template.repository"/>
