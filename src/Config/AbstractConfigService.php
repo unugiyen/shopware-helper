@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Wdt\ShopwareHelper\Config;
 
+use Generator;
 use ReflectionClass;
 use Shopware\Core\System\SystemConfig\SystemConfigService;
 
@@ -40,5 +41,21 @@ abstract class AbstractConfigService
     protected function getConfig(string $key, ?string $salesChannelId = null)
     {
         return $this->systemConfigService->get($this->getConfigPrefix().$key, $salesChannelId);
+    }
+
+    protected function transformToGenerator(string $commaSeperated, bool $skipEmpty = true): Generator
+    {
+        $rawValue = strtolower($commaSeperated);
+        $rawValue = (string) preg_replace('/\s+/', '', $rawValue);
+        $values = explode(',', $rawValue);
+
+        foreach ($values as $value) {
+            if ($skipEmpty) {
+                if ('0' !== $value && empty($value)) {
+                    continue;
+                }
+            }
+            yield $value;
+        }
     }
 }

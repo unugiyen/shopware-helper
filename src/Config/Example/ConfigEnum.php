@@ -7,4 +7,5 @@ namespace Wdt\ShopwareHelper\Config\Example;
 class ConfigEnum
 {
     public const STRING = 'stringConfig';
+    public const COMMA_STRING = 'commaStringConfig';
 }

@@ -19,12 +19,13 @@ class ConfigDataService
 
     public function getConfigData(string $salesChannelId): ConfigDataInterface
     {
-        $configData = new ConfigData();
-        $stringConfig = $this->configService->getStringConfig($salesChannelId);
-        $specificStringConfig = $this->otherConfigService->getOtherStringConfig($salesChannelId);
-        $configData->setSpecificStringConfig($specificStringConfig);
-        $configData->setStringConfig($stringConfig);
+        $data = (new ConfigData())
+            ->setStringConfig($this->configService->getStringConfig($salesChannelId))
+            ->setOtherStringConfig($this->otherConfigService->getOtherStringConfig($salesChannelId))
+            ->setCommaStringConfig($this->configService->getCommaStringConfig($salesChannelId))
+            ->setCommaStringConfigAsArray($this->configService->getCommaStringConfigAsArray($salesChannelId, false))
+        ;
 
-        return $configData;
+        return $data;
     }
 }

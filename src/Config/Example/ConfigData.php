@@ -4,30 +4,62 @@ declare(strict_types=1);
 
 namespace Wdt\ShopwareHelper\Config\Example;
 
+use Generator;
+use Shopware\Core\Framework\Struct\Struct;
 use Wdt\ShopwareHelper\Config\ConfigDataInterface;
 
-class ConfigData implements ConfigDataInterface
+class ConfigData extends Struct implements ConfigDataInterface
 {
     private string $stringConfig = '';
-    private string $specificStringConfig = '';
+    private string $otherStringConfig = '';
+    private Generator $commaStringConfig;
+    private array $commaStringConfigAsArray = [];
 
     public function getStringConfig(): string
     {
         return $this->stringConfig;
     }
 
-    public function setStringConfig(string $stringConfig): void
+    public function setStringConfig(string $stringConfig): ConfigData
     {
         $this->stringConfig = $stringConfig;
+
+        return $this;
     }
 
-    public function getSpecificStringConfig(): string
+    public function getOtherStringConfig(): string
     {
-        return $this->specificStringConfig;
+        return $this->otherStringConfig;
     }
 
-    public function setSpecificStringConfig(string $specificStringConfig): void
+    public function setOtherStringConfig(string $otherStringConfig): ConfigData
     {
-        $this->specificStringConfig = $specificStringConfig;
+        $this->otherStringConfig = $otherStringConfig;
+
+        return $this;
+    }
+
+    public function getCommaStringConfig(): Generator
+    {
+        return $this->commaStringConfig;
+    }
+
+    public function setCommaStringConfig(Generator $commaStringConfig): ConfigData
+    {
+        $this->commaStringConfig = $commaStringConfig;
+
+        return $this;
+    }
+
+    public function getCommaStringConfigAsArray(): array
+    {
+        return $this->commaStringConfigAsArray;
+    }
+
+    public function setCommaStringConfigAsArray(array $commaStringConfigAsArray): ConfigData
+    {
+        $this->commaStringConfigAsArray = $commaStringConfigAsArray;
+
+        return $this;
     }
 }

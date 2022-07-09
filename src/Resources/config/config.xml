@@ -11,5 +11,9 @@
             <name>otherStringConfig</name>
             <label>Other string config</label>
         </input-field>
+        <input-field>
+            <name>commaStringConfig</name>
+            <label>Comma string config</label>
+        </input-field>
     </card>
 </config>
