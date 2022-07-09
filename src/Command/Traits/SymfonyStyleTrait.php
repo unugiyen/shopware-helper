@@ -23,7 +23,7 @@ trait SymfonyStyleTrait
         return $progressBar;
     }
 
-    protected function setProgressBarStartFinish(string $startFinish, ProgressBar $progressBar)
+    protected function setProgressBarStartFinish(string $startFinish, ProgressBar $progressBar): void
     {
         switch ($startFinish) {
             case self::$progressStart:

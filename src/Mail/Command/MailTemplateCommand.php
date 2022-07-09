@@ -15,6 +15,7 @@ use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\MultiFilter;
 use Shopware\Core\System\Language\LanguageCollection;
+use Shopware\Core\System\SalesChannel\SalesChannelEntity;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -307,6 +308,7 @@ class MailTemplateCommand extends Command
     {
         $localMailTemplateCollection = [];
 
+        /** @var SalesChannelEntity $salesChannel */
         foreach ($salesChannels as $salesChannel) {
             $languages = $salesChannel->getLanguages();
             if (null === $languages) {
