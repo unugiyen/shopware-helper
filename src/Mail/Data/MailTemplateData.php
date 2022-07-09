@@ -5,22 +5,21 @@ declare(strict_types=1);
 namespace Wdt\ShopwareHelper\Mail\Data;
 
 use Shopware\Core\System\Language\LanguageEntity;
-use Shopware\Core\System\Locale\LocaleEntity;
 
 class MailTemplateData
 {
     private array $localContent = [];
     private LanguageEntity $language;
-    private LocaleEntity $locale;
+    private string $localeCode;
 
-    public function getLocale(): LocaleEntity
+    public function getLocaleCode(): string
     {
-        return $this->locale;
+        return $this->localeCode;
     }
 
-    public function setLocale(LocaleEntity $locale): void
+    public function setLocaleCode(string $localeCode): void
     {
-        $this->locale = $locale;
+        $this->localeCode = $localeCode;
     }
 
     public function getLocalContent(): array

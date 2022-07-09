@@ -14,15 +14,15 @@ use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\MultiFilter;
-use Shopware\Core\System\Language\LanguageEntity;
-use Shopware\Core\System\SalesChannel\SalesChannelCollection;
-use Shopware\Core\System\SalesChannel\SalesChannelEntity;
+use Shopware\Core\System\Language\LanguageCollection;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Finder\Finder;
+use Wdt\ShopwareHelper\Command\Traits\SymfonyStyleTrait;
+use Wdt\ShopwareHelper\Mail\Command\Data\LogData;
 use Wdt\ShopwareHelper\Mail\Data\MailTemplateData;
 
 /**
@@ -30,6 +30,8 @@ use Wdt\ShopwareHelper\Mail\Data\MailTemplateData;
  */
 class MailTemplateCommand extends Command
 {
+    use SymfonyStyleTrait;
+
     protected static $defaultName = 'wdt:mail-template-import';
 
     private const BASE_DIR = 'Resources/views/email';
@@ -40,9 +42,9 @@ class MailTemplateCommand extends Command
 
     private const OPT_LOCALE = 'locale';
 
-    private SymfonyStyle $io;
-
-    private array $localeCodes = [];
+    private array $cachedLocaleCodes = [];
+    private LanguageCollection $cachedLanguages;
+    private LogData $logData;
 
     private EntityRepositoryInterface $salesChannelRepository;
     private EntityRepositoryInterface $mailTemplateTypeRepository;
@@ -64,26 +66,87 @@ class MailTemplateCommand extends Command
         $this->addOption(self::OPT_LOCALE, null, InputOption::VALUE_OPTIONAL);
     }
 
-    private function getTechnicalNames(): array
+    private function generateLogs(string $type, array $logs): void
     {
-        $technicalNames = [];
+        $cachedLanguages = $this->cachedLanguages;
+
+        foreach ($logs as $languageId => $technicalNames) {
+            $cachedLanguage = $cachedLanguages->get($languageId);
+            if (null === $cachedLanguage) {
+                continue;
+            }
+
+            $cachedLanguageLocale = $cachedLanguage->getLocale();
+            if (null === $cachedLanguageLocale) {
+                continue;
+            }
+            $cachedLanguageLocaleCode = $cachedLanguageLocale->getCode();
+
+            $this->io->info(
+                sprintf(
+                    'Logging "%1$s" (Language ID: %2$s) (Locale: %3$s)',
+                    $type, $languageId, $cachedLanguageLocaleCode
+                )
+            );
+
+            foreach ($technicalNames as $technicalName) {
+                $this->io->text($technicalName);
+            }
+        }
+    }
+
+    private function displayLogs(): void
+    {
+        $logData = $this->logData;
+        $missingContentFiles = $logData->getMissingContentFiles();
+        $emptyContentFiles = $logData->getEmptyContentFiles();
+        $unknownLocalTemplates = $logData->getUnknownLocalTemplates();
+        $missingLocalTemplates = $logData->getMissingLocalTemplates();
+
+        $this->generateLogs(LogData::MISSING_LOCAL_TEMPLATES, $missingLocalTemplates);
+        $this->generateLogs(LogData::UNKNOWN_LOCAL_TEMPLATES, $unknownLocalTemplates);
+        $this->generateLogs(LogData::MISSING_CONTENT_FILES, $missingContentFiles);
+        $this->generateLogs(LogData::EMPTY_CONTENT_FILES, $emptyContentFiles);
+
+        $this->io->newLine();
+    }
+
+    private function init(InputInterface $input, OutputInterface $output): void
+    {
+        $this->io = new SymfonyStyle($input, $output);
+        $this->cachedLanguages = new LanguageCollection();
+        $this->logData = new LogData();
+    }
+
+    private function getSalesChannels(): EntityCollection
+    {
+        $criteria = new Criteria();
+        $criteria->addAssociations(['languages.locale']);
+
+        return ($this->salesChannelRepository->search($criteria, Context::createDefaultContext()))->getEntities();
+    }
+
+    private function getShopTechnicalNames(): array
+    {
+        $shopTechnicalNames = [];
 
         /** @var MailTemplateTypeCollection $templateTypes */
         $templateTypes = ($this->mailTemplateTypeRepository->search(new Criteria(), Context::createDefaultContext()))->getEntities();
         foreach ($templateTypes as $templateType) {
-            $technicalNames[] = $templateType->getTechnicalName();
+            $shopTechnicalNames[] = $templateType->getTechnicalName();
         }
 
-        return $technicalNames;
+        return $shopTechnicalNames;
     }
 
-    private function getMailTemplate(string $technicalName): ?MailTemplateEntity
+    private function getShopDefaultMailTemplate(string $technicalName): ?MailTemplateEntity
     {
         $criteria = new Criteria();
         $criteria->addFilter(
             new MultiFilter(
                 MultiFilter::CONNECTION_AND,
                 [
+                    new EqualsFilter('systemDefault', true), //prevent newly created templates being overwritten
                     new EqualsFilter('mailTemplateType.technicalName', $technicalName),
                 ]
             )
@@ -92,19 +155,14 @@ class MailTemplateCommand extends Command
         return ($this->mailTemplateRepository->search($criteria, Context::createDefaultContext()))->first();
     }
 
-    private function validateLocalContent(array $localContentFile, string $technicalName): bool
+    private function validateLocalContent(array $localContentFile, string $localTechnicalName, string $languageId): bool
     {
         if (!isset(
             $localContentFile[self::HTML],
             $localContentFile[self::PLAIN],
             $localContentFile[self::SUBJECT])
         ) {
-            $this->io->note(
-                sprintf(
-                    'Skip upsert "%1$s" - local content files not complete: html, plain and twig',
-                    $technicalName
-                )
-            );
+            $this->logData->setMissingContentFiles($languageId, $localTechnicalName);
 
             return false;
         }
@@ -114,12 +172,7 @@ class MailTemplateCommand extends Command
         $subject = $localContentFile[self::SUBJECT];
 
         if (empty($html) || empty($plain) || empty($subject)) {
-            $this->io->note(
-                sprintf(
-                    'Skip upsert "%1$s" - local content file(s) empty',
-                    $technicalName
-                )
-            );
+            $this->logData->setEmptyContentFiles($languageId, $localTechnicalName);
 
             return false;
         }
@@ -127,38 +180,19 @@ class MailTemplateCommand extends Command
         return true;
     }
 
-    private function logNotFoundLocalTemplates(
-        array $technicalNames,
-        array $localContent
-    ): void {
-        foreach ($technicalNames as $key => $technicalName) {
-            if (isset($localContent[$technicalName])) {
-                unset($technicalNames[$key]);
-            }
-        }
-
-        $newTemplates = array_values($technicalNames);
-
-        $this->io->note('Skip upsert templates that were not found locally:');
-        $this->io->listing($newTemplates);
-    }
-
-    private function upsert(array $localContent, LanguageEntity $language): void
+    private function upsert(array $localContent, string $languageId): void
     {
-        foreach ($localContent as $technicalName => $localContentFile) {
-            $mailTemplate = $this->getMailTemplate($technicalName);
+        foreach ($localContent as $localTechnicalName => $localContentFile) {
+            $shopDefaultTemplate = $this->getShopDefaultMailTemplate($localTechnicalName);
 
-            if (null === $mailTemplate) {
-                $this->io->note(
-                    sprintf(
-                        'Skip upsert "%1$s" - mail template not found',
-                        $technicalName,
-                    )
-                );
+            if (null === $shopDefaultTemplate) {
+                //local templates that could not be found in shop
+                $this->logData->setUnknownLocalTemplates($languageId, $localTechnicalName);
+
                 continue;
             }
 
-            if (!$this->validateLocalContent($localContentFile, $technicalName)) {
+            if (!$this->validateLocalContent($localContentFile, $localTechnicalName, $languageId)) {
                 continue;
             }
 
@@ -166,19 +200,19 @@ class MailTemplateCommand extends Command
             $plain = $localContentFile[self::PLAIN];
             $subject = $localContentFile[self::SUBJECT];
 
-            if (Defaults::LANGUAGE_SYSTEM === $language->getId()) {
+            if (Defaults::LANGUAGE_SYSTEM === $languageId) {
                 $data = [
-                    'id' => $mailTemplate->getId(),
+                    'id' => $shopDefaultTemplate->getId(),
                     'contentHtml' => $html,
                     'contentPlain' => $plain,
                     'subject' => $subject,
                 ];
             } else {
                 $data = [
-                    'id' => $mailTemplate->getId(),
+                    'id' => $shopDefaultTemplate->getId(),
                     'translations' => [
                         [
-                            'languageId' => $language->getId(),
+                            'languageId' => $languageId,
                             'contentHtml' => $html,
                             'contentPlain' => $plain,
                             'subject' => $subject,
@@ -189,97 +223,89 @@ class MailTemplateCommand extends Command
 
             $this->mailTemplateRepository->upsert([$data], Context::createDefaultContext());
 
-            $this->io->text(
-                sprintf(
-                    'Upsert "%1$s"',
-                    $technicalName,
-                )
-            );
+            $this->io->text(sprintf('Importing %1$s', $localTechnicalName));
         }
     }
 
-    /**
-     * @param array<string, MailTemplateData> $mailTemplateDataCollection
-     * @param array<int, string>              $technicalNames
-     */
     private function import(
-        array $mailTemplateDataCollection,
-        array $technicalNames,
-        string $localeCode = ''
+        array $localMailTemplateDataCollection,
+        array $shopTechnicalNames,
+        string $inputLocaleCode = ''
     ): void {
-        if (!empty($localeCode)) {
-            $single = [];
-
-            if (!isset($mailTemplateDataCollection[$localeCode])) {
-                throw new Exception(sprintf('Locale code "%1$s" not set for sales channels', $localeCode));
+        if (!empty($inputLocaleCode)) {
+            if (!isset($localMailTemplateDataCollection[$inputLocaleCode])) {
+                throw new Exception(sprintf('Local directory of locale "%1$s" not found', $inputLocaleCode));
             }
-            $single[$localeCode] = $mailTemplateDataCollection[$localeCode];
-            $mailTemplateDataCollection = $single;
+
+            $localMailTemplateDataCollection = array_filter(
+                $localMailTemplateDataCollection,
+                function (MailTemplateData $mailTemplateData) use ($inputLocaleCode) {
+                    return $mailTemplateData->getLocaleCode() === $inputLocaleCode;
+                }
+            );
+        }
+
+        /** @var MailTemplateData $singleMailTemplateData */
+        $singleMailTemplateData = reset($localMailTemplateDataCollection);
+
+        if (empty($singleMailTemplateData->getLocalContent())) {
+            $this->io->note('Nothing to be imported.');
+
+            return;
         }
 
         /** @var MailTemplateData $mailTemplateData */
-        foreach ($mailTemplateDataCollection as $mailTemplateData) {
-            $locale = $mailTemplateData->getLocale();
+        foreach ($localMailTemplateDataCollection as $dataCollectionLocaleCode => $mailTemplateData) {
             $language = $mailTemplateData->getLanguage();
+            $languageId = $language->getId();
             $localContent = $mailTemplateData->getLocalContent();
 
             if (empty($localContent)) {
                 continue;
             }
 
-            $this->io->success(
+            $this->io->title(
                 sprintf(
-                    'Upsert templates for language "%1$s" with ID "%2$s" and locale "%3$s"',
+                    'Importing templates for shop language "%1$s" (%3$s) (ID: %2$s)',
                     $language->getName(),
-                    $language->getId(),
-                    $locale->getCode(),
+                    $languageId,
+                    $dataCollectionLocaleCode,
                 )
             );
 
-            $this->upsert($localContent, $language);
-            $this->logNotFoundLocalTemplates($technicalNames, $localContent);
+            foreach ($shopTechnicalNames as $key => $shopTechnicalName) {
+                if (isset($localContent[$shopTechnicalName])) {
+                    unset($shopTechnicalNames[$key]);
+                }
+            }
+
+            $this->logData->setMissingLocalTemplates($languageId, array_values($shopTechnicalNames));
+
+            $this->upsert($localContent, $languageId);
         }
+
+        $this->io->success('Import done');
     }
 
-    /**
-     * @return array<string, array<string, string>>
-     */
     private function getLocalContent(string $locale): array
     {
         $finder = new Finder();
-        $finder->files()->in(__DIR__.'/../../'.self::BASE_DIR.'/'.$locale);
-
-        $localeContent = [];
-
-        foreach ($finder as $file) {
-            $relativePath = $file->getRelativePath();
-
-            $localeContent[$relativePath][$file->getFilename()] = $file->getContents();
-        }
-
-        return $localeContent;
-    }
-
-    /**
-     * @return EntityCollection<SalesChannelEntity>
-     */
-    private function getSalesChannels(): EntityCollection
-    {
-        $criteria = new Criteria();
-        $criteria->addAssociations(['languages.locale']);
-
-        return ($this->salesChannelRepository->search($criteria, Context::createDefaultContext()))->getEntities();
-    }
-
-    /**
-     * @return array<string, MailTemplateData>
-     */
-    private function getMailTemplateDataCollection(): array
-    {
-        /** @var SalesChannelCollection $salesChannels */
-        $salesChannels = $this->getSalesChannels();
+        $finder->files()->in(
+            sprintf('%1$s/../../%2$s/%3$s', __DIR__, self::BASE_DIR, $locale)
+        );
 
         $data = [];
+
+        foreach ($finder as $file) {
+            $data[$file->getRelativePath()][$file->getFilename()] = $file->getContents();
+        }
+
+        return $data;
+    }
+
+    private function getLocalMailTemplateDataCollection(EntityCollection $salesChannels): array
+    {
+        $localMailTemplateCollection = [];
 
         foreach ($salesChannels as $salesChannel) {
             $languages = $salesChannel->getLanguages();
@@ -290,40 +316,51 @@ class MailTemplateCommand extends Command
             foreach ($languages as $language) {
                 $locale = $language->getLocale();
                 if (null === $locale) {
-                    throw new Exception(sprintf('Locale %1$s not found', $locale));
+                    continue;
                 }
 
                 $localeCode = $locale->getCode();
 
-                if (in_array($localeCode, $this->localeCodes, true)) {
+                //if sales channels have the same language, skip collecting because it's already done before
+                if (in_array($localeCode, $this->cachedLocaleCodes, true)) {
                     continue;
                 }
 
-                $this->localeCodes[] = $localeCode;
+                $this->cachedLocaleCodes[] = $localeCode;
+                $this->cachedLanguages->add($language);
 
-                $localContent = $this->getLocalContent($localeCode);
+                try {
+                    $localContent = $this->getLocalContent($localeCode);
+                } catch (Exception $e) {
+                    $localContent = [];
+                }
 
                 $mailTemplateData = new MailTemplateData();
                 $mailTemplateData->setLocalContent($localContent);
                 $mailTemplateData->setLanguage($language);
-                $mailTemplateData->setLocale($locale);
+                $mailTemplateData->setLocaleCode($localeCode);
 
-                $data[$locale->getCode()] = $mailTemplateData;
+                $localMailTemplateCollection[$localeCode] = $mailTemplateData;
             }
         }
 
-        return $data;
+        return $localMailTemplateCollection;
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->io = new SymfonyStyle($input, $output);
+        $this->init($input, $output);
 
         $optionLocale = (string) $input->getOption(self::OPT_LOCALE); // @phpstan-ignore-line
-        $technicalNames = $this->getTechnicalNames();
-        $mailTemplateDataCollection = $this->getMailTemplateDataCollection();
 
-        $this->import($mailTemplateDataCollection, $technicalNames, $optionLocale);
+        $shopTechnicalNames = $this->getShopTechnicalNames();
+        $salesChannels = $this->getSalesChannels();
+
+        //collect data based on shop sales channels
+        $localMailTemplateDataCollection = $this->getLocalMailTemplateDataCollection($salesChannels);
+
+        $this->import($localMailTemplateDataCollection, $shopTechnicalNames, $optionLocale);
+        $this->displayLogs();
 
         return self::SUCCESS;
     }
