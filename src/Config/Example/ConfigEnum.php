@@ -8,4 +8,5 @@ class ConfigEnum
 {
     public const STRING = 'stringConfig';
     public const COMMA_STRING = 'commaStringConfig';
+    public const OTHER_STRING = 'otherStringConfig';
 }

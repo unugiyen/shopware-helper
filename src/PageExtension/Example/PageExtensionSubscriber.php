@@ -8,8 +8,15 @@ use Shopware\Storefront\Event\StorefrontRenderEvent;
 use Shopware\Storefront\Page\Product\ProductPageLoadedEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
-class PageDataSubscriber implements EventSubscriberInterface
+class PageExtensionSubscriber implements EventSubscriberInterface
 {
+    private PageDataService $pageDataService;
+
+    public function __construct(PageDataService $pageDataService)
+    {
+        $this->pageDataService = $pageDataService;
+    }
+
     public static function getSubscribedEvents(): array
     {
         return [
@@ -18,27 +25,14 @@ class PageDataSubscriber implements EventSubscriberInterface
         ];
     }
 
-    private function getPageData(): PageData
-    {
-        $pageData = new PageData();
-        $pageData->setFoo('string');
-        $pageData->setBaz([1, 2, 3, 4, 5]);
-
-        return $pageData;
-    }
-
     public function onProductPageLoaded(ProductPageLoadedEvent $event): void
     {
-        // Data will be available in Twig templates in page extensions of product detail.
-
         $page = $event->getPage();
-        $page->addExtension(PageExtensionEnum::PAGE_DATA, $this->getPageData());
+        $page->addExtension(PageExtensionEnum::PAGE_DATA, $this->pageDataService->getPageData());
     }
 
     public function onStorefrontRender(StorefrontRenderEvent $event): void
     {
-        // Data will be available in Twig templates of every Shopware frontend core routes
-
-        $event->setParameter(PageExtensionEnum::PAGE_DATA, $this->getPageData());
+        $event->setParameter(PageExtensionEnum::PAGE_DATA, $this->pageDataService->getPageData());
     }
 }

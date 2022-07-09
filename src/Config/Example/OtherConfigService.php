@@ -12,6 +12,6 @@ class OtherConfigService extends AbstractConfigService
 
     public function getOtherStringConfig(?string $salesChannelId = null): string
     {
-        return (string) $this->getConfig(OtherConfigEnum::OTHER_STRING, $salesChannelId); // @phpstan-ignore-line
+        return (string) $this->getConfig(ConfigEnum::OTHER_STRING, $salesChannelId); // @phpstan-ignore-line
     }
 }

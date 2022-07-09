@@ -23,7 +23,10 @@
             <tag name="kernel.event_subscriber"/>
         </service>
 
-        <service id="Wdt\ShopwareHelper\PageExtension\Example\PageDataSubscriber">
+        <service id="Wdt\ShopwareHelper\PageExtension\Example\PageDataService" >
+        </service>
+        <service id="Wdt\ShopwareHelper\PageExtension\Example\PageExtensionSubscriber">
+            <argument type="service" id="Wdt\ShopwareHelper\PageExtension\Example\PageDataService"/>
             <tag name="kernel.event_subscriber"/>
         </service>
 
@@ -31,7 +34,7 @@
             <argument type="service" id="Shopware\Core\Content\Mail\Service\MailService"/>
             <argument type="service" id="mail_template.repository"/>
         </service>
-        <service id="Wdt\ShopwareHelper\Mail\Command\MailTemplateCommand">
+        <service id="Wdt\ShopwareHelper\Mail\Command\ImportDefaultMailTemplateCommand">
             <argument type="service" id="sales_channel.repository"/>
             <argument type="service" id="mail_template_type.repository"/>
             <argument type="service" id="mail_template.repository"/>
