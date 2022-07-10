@@ -7,7 +7,6 @@
         <parameter key="wdt.shopware.helper.project_dir">%kernel.project_dir%</parameter>
     </parameters>
     <services>
-
         <!-- EXAMPLE: CONFIG -->
         <service id="Wdt\ShopwareHelper\Config\Example\ConfigService" >
             <argument type="service" id="Shopware\Core\System\SystemConfig\SystemConfigService"/>
@@ -21,6 +20,8 @@
         </service>
         <service id="Wdt\ShopwareHelper\Config\Example\ConfigDataSubscriber">
             <argument type="service" id="Wdt\ShopwareHelper\Config\Example\ConfigDataService"/>
+            <argument type="service" id="Wdt\ShopwareHelper\Mail\Example\MailService"/>
+            <argument>%wdt.shopware.helper.project_dir%</argument>
             <tag name="kernel.event_subscriber"/>
         </service>
         <!-- END EXAMPLE: CONFIG -->
@@ -37,6 +38,7 @@
         <service id="Wdt\ShopwareHelper\Mail\Example\MailService" >
             <argument type="service" id="Shopware\Core\Content\Mail\Service\MailService"/>
             <argument type="service" id="mail_template.repository"/>
+            <argument type="service" id="shopware.filesystem.public"/>
         </service>
         <service id="Wdt\ShopwareHelper\Mail\System\Command\ImportDefaultMailTemplatesCommand">
             <argument type="service" id="sales_channel.repository"/>

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Wdt\ShopwareHelper\Mail;
 
 use Exception;
+use League\Flysystem\FilesystemInterface;
 use Shopware\Core\Content\Mail\Service\AbstractMailService as ShopwareAbstractMailService;
 use Shopware\Core\Content\MailTemplate\MailTemplateEntity;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
@@ -28,17 +29,44 @@ abstract class AbstractMailService
     private const CONTENT_PLAIN = 'contentPlain';
     private const RECIPIENTS_CC = 'recipientsCc';
     private const RECIPIENTS_BCC = 'recipientsBcc';
+    private const MEDIA_IDS = 'mediaIds';
     private const BIN_ATTACHMENTS = 'binAttachments';
 
     protected ShopwareAbstractMailService $shopwareMailService;
     protected EntityRepositoryInterface $mailTemplateRepository;
+    protected FilesystemInterface $filesystem;
 
     public function __construct(
         ShopwareAbstractMailService $shopwareMailService,
-        EntityRepositoryInterface $mailTemplateRepository
+        EntityRepositoryInterface $mailTemplateRepository,
+        FilesystemInterface $filesystem
     ) {
         $this->shopwareMailService = $shopwareMailService;
         $this->mailTemplateRepository = $mailTemplateRepository;
+        $this->filesystem = $filesystem;
+    }
+
+    protected function generateBinAttachments(array $binAttachmentUrls): array
+    {
+        $binAttachments = [];
+
+        foreach ($binAttachmentUrls as $binAttachmentUrl) {
+            try {
+                $content = $this->filesystem->read($binAttachmentUrl) ?: '';
+                $fileName = basename($binAttachmentUrl);
+                $mimeType = $this->filesystem->getMimetype($binAttachmentUrl) ?: null;
+            } catch (Exception $e) {
+                continue;
+            }
+
+            $binAttachments[] = [
+                'content' => $content,
+                'fileName' => $fileName,
+                'mimeType' => $mimeType,
+            ];
+        }
+
+        return $binAttachments;
     }
 
     protected function validateAndGetTemplates(array $templateTechnicalNames, SalesChannelContext $context): array
@@ -64,7 +92,7 @@ abstract class AbstractMailService
 
         $data[self::SUBJECT] = $template->getSubject();
         $data[self::SENDER_EMAIL] = $mailData->getSenderEmail();
-        $data[self::SENDER_NAME] = $template->getSenderName();
+        $data[self::SENDER_NAME] = $template->getSenderName() ?: $mailData->getSenderName();
         $data[self::RECIPIENTS] = $mailData->getRecipients();
         $data[self::SALES_CHANNEL_ID] = $context->getSalesChannelId();
         $data[self::CONTENT_HTML] = $template->getContentHtml();
@@ -80,6 +108,11 @@ abstract class AbstractMailService
             $data[self::RECIPIENTS_BCC] = $recipientsBcc;
         }
 
+        $attachments = $mailData->getMediaIds();
+        if (!empty($attachments)) {
+            $data[self::MEDIA_IDS] = $attachments;
+        }
+
         $binAttachments = $mailData->getBinAttachments();
         if (!empty($binAttachments)) {
             $data[self::BIN_ATTACHMENTS] = $binAttachments;
@@ -88,7 +121,7 @@ abstract class AbstractMailService
         return $data;
     }
 
-    public function getMailTemplate(string $technicalName, SalesChannelContext $context): ?MailTemplateEntity
+    protected function getMailTemplate(string $technicalName, SalesChannelContext $context): ?MailTemplateEntity
     {
         $criteria = new Criteria();
         $criteria->addFilter(
@@ -100,7 +133,7 @@ abstract class AbstractMailService
         return ($this->mailTemplateRepository->search($criteria, $context->getContext()))->first();
     }
 
-    public function send(MailData $mailData, SalesChannelContext $context): void
+    protected function send(MailData $mailData, SalesChannelContext $context): void
     {
         $shopMailData = $this->setMailData($mailData, $context);
         $this->shopwareMailService->send($shopMailData, $context->getContext(), $mailData->getTemplateData());

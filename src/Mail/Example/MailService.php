@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Wdt\ShopwareHelper\Mail\Example;
 
+use League\Flysystem\FilesystemInterface;
+use Shopware\Core\Content\Mail\Service\AbstractMailService as ShopwareAbstractMailService;
 use Shopware\Core\Content\MailTemplate\MailTemplateEntity;
+use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
 use Wdt\ShopwareHelper\Mail\AbstractMailService;
 use Wdt\ShopwareHelper\Mail\Data\MailData;
@@ -14,6 +17,42 @@ use Wdt\ShopwareHelper\Mail\Data\MailData;
  */
 class MailService extends AbstractMailService
 {
+    public function __construct(
+        ShopwareAbstractMailService $shopwareMailService,
+        EntityRepositoryInterface $mailTemplateRepository,
+        FilesystemInterface $filesystem
+    ) {
+        parent::__construct($shopwareMailService, $mailTemplateRepository, $filesystem);
+    }
+
+    public function sendSpecificEmail(
+        MailInputData $mailInputData,
+        SalesChannelContext $context
+    ): void {
+        $templates = $this->validateAndGetTemplates(['contact_form'], $context);
+        $someTemplate = $templates['contact_form'];
+
+        $senderEmail = 'sender@example.com';
+        $senderName = 'Example';
+
+        $binAttachments = $this->generateBinAttachments(['bundles/wdtshopwarehelper/example/shopware.png']);
+
+        $mailData = (new MailData(
+            $someTemplate,
+            $senderName,
+            $senderEmail,
+            [
+                'recipient1@example.com' => 'Recipient 1',
+                'recipient2@example.com' => 'Recipient 2',
+            ]
+        ))
+        ->setRecipientsCc('me1@live.com')
+        ->setBinAttachments($binAttachments)
+        ;
+
+        $this->send($mailData, $context);
+    }
+
     public function sendMails(
         MailInputData $mailInputData,
         SalesChannelContext $context
@@ -26,46 +65,11 @@ class MailService extends AbstractMailService
         $this->sendSomeOtherMail($someOtherTemplate, $mailInputData, $context);
     }
 
-    public function sendSpecificEmail(
-        MailInputData $mailInputData,
-        SalesChannelContext $context
-    ): void {
-        $templates = $this->validateAndGetTemplates(['specific_template'], $context);
-        $someTemplate = $templates['some_template'];
-
-        $senderEmail = 'example@mail.com';
-        $senderName = 'Example';
-
-        $mailData = new MailData(
-            $someTemplate,
-            $senderName,
-            $senderEmail,
-            [
-                $senderEmail => $senderName,
-            ]
-        );
-
-        $this->send($mailData, $context);
-    }
-
     private function sendSomeOtherMail(
         MailTemplateEntity $template,
         MailInputData $mailInputData,
         SalesChannelContext $context
     ): void {
-        $senderEmail = 'example@mail.com';
-        $senderName = 'Example';
-
-        $mailData = new MailData(
-            $template,
-            $senderName,
-            $senderEmail,
-            [
-                $senderEmail => $senderName,
-            ]
-        );
-
-        $this->send($mailData, $context);
     }
 
     private function sendSomeMail(
@@ -73,23 +77,5 @@ class MailService extends AbstractMailService
         MailInputData $mailInputData,
         SalesChannelContext $context
     ): void {
-        $senderEmail = 'example@mail.com';
-        $senderName = 'Example';
-
-        $mailData = new MailData(
-            $template,
-            $senderName,
-            $senderEmail,
-            [
-                $senderEmail => $senderName,
-            ]
-        );
-
-        $mailData->setTemplateData([
-            'foo' => true,
-            'baz' => 'string',
-        ]);
-
-        $this->send($mailData, $context);
     }
 }

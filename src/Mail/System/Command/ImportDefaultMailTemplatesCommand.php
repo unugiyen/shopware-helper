@@ -35,8 +35,6 @@ class ImportDefaultMailTemplatesCommand extends Command
 
     protected static $defaultName = 'wdt:mail-template-import';
 
-    private const BASE_DIR = 'Resources/views/email';
-
     private const HTML = 'html.twig';
     private const PLAIN = 'plain.twig';
     private const SUBJECT = 'subject.twig';
@@ -292,7 +290,7 @@ class ImportDefaultMailTemplatesCommand extends Command
     {
         $finder = new Finder();
         $finder->files()->in(
-            sprintf('%1$s/../%2$s/%3$s', __DIR__, self::BASE_DIR, $locale)
+            sprintf('%1$s/../Resources/views/email/%2$s', __DIR__, $locale)
         );
 
         $data = [];
