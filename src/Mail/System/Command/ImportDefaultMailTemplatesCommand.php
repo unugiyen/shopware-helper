@@ -33,7 +33,7 @@ class ImportDefaultMailTemplatesCommand extends Command
 {
     use SymfonyStyleTrait;
 
-    protected static $defaultName = 'wdt:mail-template-import';
+    protected static $defaultName = 'wdt:import-mail-template';
 
     private const HTML = 'html.twig';
     private const PLAIN = 'plain.twig';
@@ -141,6 +141,7 @@ class ImportDefaultMailTemplatesCommand extends Command
     private function getShopDefaultMailTemplate(string $technicalName): ?MailTemplateEntity
     {
         $criteria = new Criteria();
+        $criteria->setLimit(1);
         $criteria->addFilter(
             new MultiFilter(
                 MultiFilter::CONNECTION_AND,
@@ -182,9 +183,9 @@ class ImportDefaultMailTemplatesCommand extends Command
     private function upsert(array $localContent, string $languageId): void
     {
         foreach ($localContent as $localTechnicalName => $localContentFile) {
-            $shopDefaultTemplate = $this->getShopDefaultMailTemplate($localTechnicalName);
+            $shopDefaultMailTemplate = $this->getShopDefaultMailTemplate($localTechnicalName);
 
-            if (null === $shopDefaultTemplate) {
+            if (null === $shopDefaultMailTemplate) {
                 //local templates that could not be found in shop
                 $this->logData->setUnknownLocalTemplates($languageId, $localTechnicalName);
 
@@ -201,14 +202,14 @@ class ImportDefaultMailTemplatesCommand extends Command
 
             if (Defaults::LANGUAGE_SYSTEM === $languageId) {
                 $data = [
-                    'id' => $shopDefaultTemplate->getId(),
+                    'id' => $shopDefaultMailTemplate->getId(),
                     'contentHtml' => $html,
                     'contentPlain' => $plain,
                     'subject' => $subject,
                 ];
             } else {
                 $data = [
-                    'id' => $shopDefaultTemplate->getId(),
+                    'id' => $shopDefaultMailTemplate->getId(),
                     'translations' => [
                         [
                             'languageId' => $languageId,

@@ -29,8 +29,8 @@ class MailService extends AbstractMailService
         MailInputData $mailInputData,
         SalesChannelContext $context
     ): void {
-        $templates = $this->validateAndGetTemplates(['contact_form'], $context);
-        $someTemplate = $templates['contact_form'];
+        $templates = $this->validateAndGetTemplates(['specific_template'], $context);
+        $someTemplate = $templates['specific_template'];
 
         $senderEmail = 'sender@example.com';
         $senderName = 'Example';

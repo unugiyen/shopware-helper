@@ -46,6 +46,14 @@
             <argument type="service" id="mail_template.repository"/>
             <tag name="console.command"/>
         </service>
+        <service id="Wdt\ShopwareHelper\Mail\System\Command\CreateMailTemplateTypeCommand">
+            <argument type="service" id="mail_template_type.repository"/>
+            <tag name="console.command"/>
+        </service>
+        <service id="Wdt\ShopwareHelper\Mail\System\Command\DeleteMailTemplateTypeCommand">
+            <argument type="service" id="mail_template_type.repository"/>
+            <tag name="console.command"/>
+        </service>
 
         <service id="Wdt\ShopwareHelper\Media\MediaService">
             <argument type="service" id="media.repository"/>
